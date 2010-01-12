@@ -12,7 +12,7 @@
 
 (defun signal-error (str &rest args)
   (if *break-on-errors* 
-      (apply #'error (first args) (rest args))
+      (apply #'cerror "Continue with remaining tests" (first args) (rest args))
       (apply #'force-format str args)))
 
 (defmacro check-true (form)
