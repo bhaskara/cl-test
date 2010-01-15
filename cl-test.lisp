@@ -1,12 +1,13 @@
 (defpackage :cl-test
   (:use :cl :cl-utils)
-  (:export :check-true :check-equal :check-error :check-randomized :load-relative :*lhs* :*rhs* :*print-forms*
+  (:export :check-true :check-equal :check-error :check-randomized :load-relative :*lhs* :*rhs* :*lhf* :*rhf* :*print-forms*
 	   :srs :rrs :*saved-random-state* :*break-on-errors*))
 
 (in-package :cl-test)
 
 (defvar *out* t)
-(defvars *lhs* *rhs*)
+
+(defvars *lhs* *rhs* *lhf* *rhf*)
 (defvar *print-forms* nil "Whether to print out what's being tested before testing it")
 (defvar *break-on-errors* t "Whether to signal an error upon a failed test, or just print a message")
 
@@ -17,18 +18,23 @@
 
 (defmacro check-true (form)
   `(progn
+     (setq *lhf* ',form)
+     (when *print-forms*
+       (force-format *out* "~&Checking if ~a is true..." *lhf*))
      (setq *lhs* ,form)
      (unless *lhs*
-       (signal-error *out* "~&~a asserted true but equalled nil" ',form))))
+       (signal-error *out* "~&~a asserted true but equalled nil" *lhf*))
+     (when *print-forms* (force-format *out* " ok"))))
 
 (defmacro check-equal (f1 f2 &optional test)
   (orf test #'equal)
   `(progn
+     (setq *lhf* ',f1 *rhf* ',f2)
      (when *print-forms*
-       (force-format *out* "~&Checking if ~a equals ~a..." ',f1 ',f2))
+       (force-format *out* "~&Checking if ~a equals ~a..." *lhf* *rhf*))
      (setq *lhs* ,f1 *rhs* ,f2)
      (unless (funcall ,test *lhs* *rhs*)
-       (signal-error *out* "~&LHS ~a~& equalled ~a~&and RHS ~a~& equalled ~a~&which did not satisfy equality test ~a" ',f1 *lhs* ',f2 *rhs* ,test))
+       (signal-error *out* "~&LHS ~a~& equalled ~a~&and RHS ~a~& equalled ~a~&which did not satisfy equality test ~a" *lhf* *lhs* *rhf* *rhs* ,test))
      (when *print-forms* (force-format *out* " ok"))))
        
 
